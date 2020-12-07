@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/index.css">
+</head>
+<body>
+    <h4>js面向对象 动态添加标签页</h4>
+    <div class="box">
+        <div class="nav">
+            <ul>
+                <li class="abb"><span>测试1</span><i class="iconfont icon-guanbi"></i></li>
+                <li><span>测试2</span><i class="iconfont icon-guanbi"></i></li>
+                <li><span>测试3</span><i class="iconfont icon-guanbi"></i></li>
+            </ul>
+        </div>
+        <!-- 添加 -->
+        <div class="add">+</div>
+        <div class="content">
+            <div style="display: block;">测试1</div>
+            <div>测试2</div>
+            <div>测试3</div>
+        </div>
+    </div>
+</body>
+<script>
+    
+    var that;
+    function Label(){
+        that = this;
+        
+        this.add = document.querySelector(".add");
+        //获取nav里面的UL以及带有content类的标签用于后面动态添加
+        this.navUl = document.querySelector("ul");
+
+        this.content = document.querySelector(".content");
+       
+    }
+    //清空类名跟隐藏内容的方法
+    Label.prototype.adddd = function(){
+        for(var i = 0; i < that.navLi.length; i++){
+            // console.log(that.navLi);
+            that.navLi[i].className = "";
+            that.contentDiv[i].style.display = "none";
+        }
+    }
+    //添加的方法
+    Label.prototype.addLi = function(){
+        // updateNode();
+        //添加事件
+        this.add.onclick = function(){
+            //点击后马上调用清空方法
+            that.adddd();
+            //新建测试li
+            var Lis = document.createElement("li");
+            var span = document.createElement("span");
+            var is = document.createElement("i");
+            //设置标签内容
+            is.className = "iconfont icon-guanbi";
+            span.innerHTML = "新选项卡";
+            // lis.innerHTML = "<span>"+新选项卡+"</span>"
+            //当点击的时候把标签添加到ul里面
+            Lis.appendChild(span);
+            Lis.appendChild(is);
+            that.navUl.appendChild(Lis);
+            //新建内容div
+            var divs = document.createElement("div");
+            //设置随机数
+            divs.innerHTML = Math.random();
+            // 当点击的时候把标签添加到带有.content类里面
+            that.content.appendChild(divs);
+            //给新建的标签加上类名
+            Lis.className = "abb";
+            divs.style.display = "block";
+            //每点击一次重新绑定一次
+            that.optionLi(); 
+        }
+    }
+    //选项卡切换跟修改以及删除的方法
+    Label.prototype.optionLi = function(){
+        //每次调用重新获取一遍
+        this.navLi = document.querySelectorAll("ul li");
+        this.contentDiv = document.querySelectorAll(".content div");
+        this.delete = document.querySelectorAll("ul li i");
+        //切换功能
+        for(var i = 0; i < this.navLi.length; i++){
+            //给li标签添加索引号 
+            this.navLi[i].setAttribute("data-index" , i);
+            //绑定点击事件
+            this.navLi[i].onclick = function(){
+                //排他操作
+                for(var j = 0; j < that.navLi.length; j++){
+                    that.navLi[j].removeAttribute("class");
+                    that.contentDiv[j].style.display = "none";
+                }
+                this.className = "abb";
+                var index = this.getAttribute("data-index");
+                that.contentDiv[index].style.display = "block"; 
+                that.optionLi();
+            } 
+            
+            //给导航栏绑定双击事件
+            var sc = this.navLi[i].getAttribute("data-index");
+            this.navLi[i].ondblclick = function(){
+                //获取到本来的值
+                var value = this.children[0].innerHTML;
+                this.innerHTML = '<input type="text"  autofocus="autofocus" onfocus="this.select()" value=' + value + '><i class="iconfont icon-guanbi"></i>';
+                //当文本框失去焦点时回复原来的样式
+                this.children[0].onblur = function(){
+                    this.parentNode.children[0].innerHTML = value;
+                    var value = this.value;
+                    this.parentNode.innerHTML = '<span>' + value + '</span><i class="iconfont icon-guanbi"> </i>';
+                    that.optionLi();
+                }
+            }
+            //给内容绑定双击事件
+            this.contentDiv[i].ondblclick = function(){
+                var value = this.innerHTML;
+                this.innerHTML = '<textarea  onfocus="this.select()" onmouseover="this.focus()" resize:"none">' + value + '</textarea>';
+                //当文本框失去焦点时回复原来的样式
+                this.children[0].onblur = function(){
+                    this.parentNode.innerHTML = this.value;
+                    //重新调用optionLi方法刷新
+                    that.optionLi();
+                }
+            }
+            //删除功能
+            //获取li标签的索引号
+            var jc = this.navLi[i].getAttribute("data-index");
+            //闭包保存每个索引号
+            (function(jc){
+                that.delete[jc].onclick = function(e){
+                    //终止冒泡
+                    e.stopPropagation();
+                    //删除当前索引号的li跟div
+                    that.navLi[jc].remove();
+                    that.contentDiv[jc].remove();
+                    //如果删除的不是带有abb类的标签，直接中断判断
+                    if(document.querySelector(".abb")){
+                        return;
+                    }else if (that.navLi[jc - 1]) {//如果当前删除的不是当前的第一个，那么跳转到上一个
+                        //排他操作
+                        for (var i = 0; i < that.navLi.length; i++) {
+                            that.navLi[i].removeAttribute("class");
+                            that.contentDiv[i].style.display = "none";
+                        }
+                        // 设置当前
+                        that.navLi[jc - 1].className = "abb";
+                        that.contentDiv[jc - 1].style.display = "block";
+                    } else if (that.navLi[parseInt(jc + 1)]) {//如果删除的当前的第一个的那么跳转到下一个
+                        //排他操作
+                        for (var i = 0; i < that.navLi.length; i++) {
+                            that.navLi[i].removeAttribute("class");
+                            that.contentDiv[i].style.display = "none";
+                        }
+                        // 设置当前
+                        that.navLi[parseInt(jc + 1)].className = "abb";
+                        that.contentDiv[parseInt(jc + 1)].style.display = "block";
+                    }
+                    that.optionLi();
+                 }
+            })(jc);
+            
+        }
+    }
+    //实例化对象
+    var lable = new Label();
+    //调用添加的方法
+    lable.addLi();
+    //调用切换以及删除，修改的的方法
+    lable.optionLi();   
+
+</script>
+</html>
